@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>특허법인 테헤란 | 스마트 견적 시스템 v4.0</title>
-    <script src="https://cdn.tailwindcss.com" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" async></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" media="print" onload="this.media='all'">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;500;600;700;800&display=swap');
         
         :root { --teheran-navy: #001A35; --teheran-blue: #2563EB; --teheran-light-bg: #F8FAFC; }
         body { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #334155; }
@@ -698,7 +698,7 @@
             
             document.getElementById('pv-sender-name').innerText = document.getElementById('in-sender-name').value;
             document.getElementById('pv-sender-phone').innerText = `${document.getElementById('in-sender-phone').value}`;
-            document.getElementById('pv-sender-email').innerText = `${document.getElementById('in-sender-email').value}`;
+            document.getElementById('pv-sender-email').innerText = document.getElementById('in-sender-email').value;
 
             document.getElementById('pv-bank-name').innerText = document.getElementById('in-bank-name').value;
             document.getElementById('pv-bank-account').innerText = document.getElementById('in-bank-account').value;
