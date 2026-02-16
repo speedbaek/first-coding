@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>특허법인 테헤란 | 스마트 견적 시스템 v4.0</title>
+    <script src="https://cdn.tailwindcss.com" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" async></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+    <style>
+        
+        :root { --teheran-navy: #001A35; --teheran-blue: #2563EB; --teheran-light-bg: #F8FAFC; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #334155; }
+        
+        .admin-sidebar { background: #FFFFFF; border-right: 1px solid #E2E8F0; width: 500px; }
+        .field-label { font-size: 10px; font-weight: 700; color: #94A3B8; margin-bottom: 2px; display: block; text-transform: uppercase; }
+        .admin-input { width: 100%; border: 1px solid #E2E8F0; border-radius: 4px; padding: 5px 8px; font-size: 12px; outline: none; transition: all 0.2s; }
+        .admin-input:focus { border-color: var(--teheran-blue); box-shadow: 0 0 0 2px rgba(37,99,235,0.05); }
+        .section-title { font-size: 10px; font-weight: 700; color: #2563EB; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #E2E8F0; }
+
+        #preview-container { background-color: #F1F5F9; min-height: 100vh; overflow-y: auto; padding: 60px 20px; }
+        
+        .hero-header { background-color: var(--teheran-navy); padding: 28px 0 0 0; color: white; position: relative; }
+        
+        .logo-center { 
+            font-family: 'Pretendard', sans-serif; 
+            font-weight: 900; 
+            font-size: 26px; 
+            letter-spacing: -0.02em; 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        /* [수정] 로고 이미지 스타일: 기본은 숨김 */
+        .logo-img { height: 35px; margin: 0 auto; display: none; }
+
+        .premium-table th { background-color: var(--teheran-light-bg); color: #64748B; font-size: 11px; font-weight: 600; padding: 10px 16px; border-bottom: 1px solid #E2E8F0; text-transform: uppercase; }
+        .premium-table td { padding: 12px 16px; border-bottom: 1px solid #F1F5F9; font-size: 15px; vertical-align: top; }
+        
+        .col-gov { text-align: right; width: 200px; padding-right: 40px !important; }
+        .col-fee { text-align: right; width: 180px; padding-right: 20px !important; }
+        
+        .bank-table { width: 100%; border-collapse: collapse; background-color: white; border: 1px solid #E2E8F0; }
+        .bank-table td { border: 1px solid #E2E8F0; padding: 8px 12px; font-size: 11px; }
+        .bank-table td:first-child { background-color: var(--teheran-light-bg); color: #64748B; font-weight: 700; width: 120px; text-align: center; }
+        .bank-table td:last-child { color: #334155; font-weight: 500; }
+
+        .catchphrase-container { font-family: 'Pretendard', sans-serif; line-height: 1.2; color: #001A35; }
+        .cp-text { font-size: 26px; font-weight: 900; letter-spacing: -0.05em; }
+
+        .seal-wrapper { position: relative; display: inline-block; }
+        .official-seal {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            right: -65px;
+            top: -32px;
+            z-index: 10;
+            mix-blend-mode: multiply;
+            object-fit: contain;
+            display: none;
+        }
+
+        .label-left { display: inline-block; width: 35px; opacity: 0.6; }
+        .label-right { display: inline-block; width: 65px; opacity: 0.6; }
+
+        /* 모바일: 좌측/우측 세로 배치, 둘 다 보이도록 */
+        @media (max-width: 767px) {
+            .admin-sidebar { width: 100%; max-height: none; }
+            .admin-sidebar .grid.grid-cols-2 { grid-template-columns: 1fr; }
+            #preview-container { padding: 20px 12px 90px; min-height: auto; }
+            .premium-table th, .premium-table td { font-size: 13px; padding: 12px 10px; }
+            .premium-table .col-gov, .premium-table .col-fee { width: 100px; padding-right: 10px !important; }
+            .bank-table td { padding: 10px 12px; font-size: 13px; }
+            .field-label { font-size: 12px; }
+            .hero-header .logo-center { font-size: 22px; margin-bottom: 16px; }
+            .cp-text { font-size: 24px; }
+            .official-seal { width: 48px; height: 48px; right: -52px; top: -24px; }
+        }
+
+        .print-btn-fixed { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; padding: 12px 16px; background: white; border-top: 1px solid #E2E8F0; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); pointer-events: auto; }
+        .print-btn-fixed button { min-height: 48px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor: pointer; user-select: none; }
+
+        @media print {
+            @page { margin: 12mm; size: A4; }
+            html, body { overflow: visible !important; height: auto !important; min-height: auto !important; }
+            body > div, #preview-container, #preview-container > div, .max-w-4xl, .overflow-x-auto { overflow: visible !important; height: auto !important; min-height: auto !important; }
+            .no-print, .print-btn-fixed, aside, #mobile-preview-divider { display: none !important; }
+            #preview-container { padding: 0 !important; background: white !important; }
+            .max-w-4xl { max-width: 56rem !important; box-shadow: none !important; border: none !important; margin: 0 auto !important; padding: 0 !important; min-height: auto !important; }
+            .hero-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .logo-img { filter: invert(1); mix-blend-mode: normal !important; }
+            /* 인쇄 시 PC 레이아웃 강제 (수신/발신 좌우 배치) */
+            .print-row { flex-direction: row !important; justify-content: space-between !important; align-items: flex-end !important; }
+            .print-row-center { align-items: center !important; }
+            .print-half { width: 50% !important; }
+            .print-row .print-half:last-child { display: flex !important; flex-direction: column !important; align-items: flex-end !important; }
+            .print-grid { grid-template-columns: repeat(3, 1fr) !important; }
+            .print-grid > div { border-right: 1px solid rgba(255,255,255,0.1) !important; }
+            .print-grid > div:last-child { border-right: none !important; }
+            .print-total { width: 280px !important; border-top: none !important; border-left: 1px solid #E2E8F0 !important; padding-top: 0 !important; padding-left: 1.5rem !important; }
+            .print-bank { flex-direction: row !important; justify-content: space-between !important; align-items: flex-end !important; }
+            .print-bank-left { width: auto !important; flex: 1 !important; max-width: calc(100% - 300px) !important; }
+            .print-footer .print-row { flex-direction: row !important; justify-content: space-between !important; align-items: center !important; }
+            .print-footer-right { width: 280px !important; padding-left: 1.5rem !important; }
+            .bank-table { max-width: 320px !important; }
+            /* 페이지 나눔 방지 */
+            .print-footer, .seal-wrapper, .catchphrase-container { page-break-inside: avoid !important; }
+            .max-w-4xl > div:last-child { page-break-inside: avoid !important; }
+            .premium-table, .bank-table { page-break-inside: avoid !important; }
+            .print-keep { page-break-inside: avoid !important; }
+        }
+    </style>
+</head>
+<body class="antialiased overflow-hidden">
+    <script>
+    (function(){
+      function fmt(x){ return x.getFullYear()+'.'+String(x.getMonth()+1).padStart(2,'0')+'.'+String(x.getDate()).padStart(2,'0'); }
+      function run(){
+        var d=new Date(), d7=new Date(d); d7.setDate(d7.getDate()+7);
+        var s=d.toISOString().split('T')[0], s7=d7.toISOString().split('T')[0];
+        var iq=document.getElementById('in-quote-date'), ie=document.getElementById('in-expiry-date');
+        var pt=document.getElementById('pv-today'), pe=document.getElementById('pv-expiry-val');
+        if(iq){ iq.value=s; }
+        if(ie){ ie.value=s7; }
+        if(pt){ pt.innerText=fmt(d); }
+        if(pe){ pe.innerText=fmt(d7); }
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run);
+      else run();
+    })();
+    </script>
+    <div class="flex flex-col md:flex-row h-screen overflow-y-auto md:overflow-hidden">
+        <aside class="admin-sidebar flex-shrink-0 flex flex-col overflow-y-auto shadow-xl z-20 no-print md:w-[500px]">
+            <div class="p-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center flex-shrink-0">
+                <h2 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-blue-600"></i> 견적 마스터 v4.0</h2>
+                <div class="flex gap-1.5">
+                    <button onclick="loadSample()" class="text-[9px] font-bold border border-slate-200 px-2 py-0.5 rounded bg-white hover:bg-slate-50">샘플</button>
+                    <button onclick="resetAll()" class="text-[9px] font-bold border border-slate-200 px-2 py-0.5 rounded bg-white text-red-500 hover:bg-red-50">초기화</button>
+                    <button onclick="testGoogleSheet()" class="text-[9px] font-bold border border-green-300 px-2 py-0.5 rounded bg-green-50 text-green-700 hover:bg-green-100" title="현재 입력값을 구글 시트로 전송 테스트">시트테스트</button>
+                </div>
+            </div>
+            <div class="p-4 space-y-4 overflow-y-auto flex-1 min-h-0">
+                <!-- 0. 템플릿 -->
+                <section class="space-y-2">
+                    <div class="section-title flex items-center justify-between">
+                        <span><i class="fa-solid fa-bookmark mr-1"></i> 템플릿</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="template-select" class="admin-input flex-1 text-[11px]" onchange="loadTemplate(this.value)">
+                            <option value="">— 템플릿 불러오기 —</option>
+                        </select>
+                        <button onclick="saveTemplate()" class="text-[10px] font-bold bg-slate-600 text-white px-3 py-1.5 rounded hover:bg-slate-700 whitespace-nowrap">저장</button>
+                        <button onclick="deleteTemplate()" class="text-[10px] font-bold border border-slate-300 px-2 py-1.5 rounded hover:bg-slate-100 text-slate-500" title="선택한 템플릿 삭제">삭제</button>
+                    </div>
+                </section>
+
+                <!-- 1. 수신정보 -->
+                <section class="space-y-2">
+                    <div class="section-title">1. 수신정보</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="col-span-2"><label class="field-label">수신자</label><input type="text" id="in-customer" class="admin-input" value="김진왕 원장" oninput="updatePreview()"></div>
+                        <div><label class="field-label">연락처</label><input type="text" id="in-phone" class="admin-input" value="010-1234-5678" oninput="updatePreview()"></div>
+                        <div class="col-span-3"><label class="field-label">이메일</label><input type="text" id="in-email" class="admin-input" value="jinwang.kim@teheran-sample.com" oninput="updatePreview()"></div>
+                    </div>
+                </section>
+
+                <!-- 2. 발신정보 -->
+                <section class="space-y-2">
+                    <div class="section-title">2. 발신정보</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div><label class="field-label">담당 변리사</label><input type="text" id="in-sender-name" class="admin-input" value="윤웅채" oninput="updatePreview()"></div>
+                        <div><label class="field-label">연락처</label><input type="text" id="in-sender-phone" class="admin-input" value="010-8875-4370" oninput="updatePreview()"></div>
+                        <div><label class="field-label">이메일</label><input type="text" id="in-sender-email" class="admin-input" value="wcyoon@thrlaw.co.kr" oninput="updatePreview()"></div>
+                    </div>
+                </section>
+
+                <!-- 3. 견적생성일/유효기간 -->
+                <section class="space-y-2">
+                    <div class="section-title">3. 견적생성일 / 유효기간</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="field-label">견적 생성일</label><input type="date" id="in-quote-date" class="admin-input" oninput="updatePreview()"></div>
+                        <div>
+                            <label class="field-label">유효기간</label>
+                            <select id="in-expiry-opt" class="admin-input" onchange="handleExpiry(this.value)">
+                                <option value="3">3일간</option><option value="7" selected>7일간</option><option value="15">15일간</option><option value="custom">직접 선택</option>
+                            </select>
+                            <input type="date" id="in-expiry-date" class="admin-input mt-1 hidden" oninput="updatePreview()">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. 견적세부정보 -->
+                <section class="space-y-2">
+                    <div class="section-title">4. 견적세부정보 (Doc Info)</div>
+                    <input type="text" id="in-quote-info" class="admin-input" value="신규, 특허출원, 우선심사, 1건" oninput="updatePreview()" placeholder="임의 기재">
+                </section>
+
+                <!-- 5. 제안서 제목 -->
+                <section class="space-y-2">
+                    <div class="section-title">5. 제안서 제목</div>
+                    <input type="text" id="in-title" class="admin-input" value="특허출원 비용 견적서 송부의 건" oninput="updatePreview()" placeholder="임의 기재">
+                </section>
+
+                <!-- 6. 비용세부항목 -->
+                <section class="space-y-2">
+                    <div class="section-title flex items-center justify-between">
+                        <span>6. 비용세부항목</span>
+                        <button onclick="addRow()" class="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold hover:bg-blue-700">+ 추가</button>
+                    </div>
+                    <div id="items-container" class="space-y-3"></div>
+                </section>
+
+                <!-- 7. 은행정보 / 이미지 / 하단멘트 / 총금액 문구 -->
+                <section class="space-y-2">
+                    <div class="section-title">7. 은행정보</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="field-label">은행명</label><input type="text" id="in-bank-name" class="admin-input" oninput="updatePreview()" value="신한은행"></div>
+                        <div><label class="field-label">계좌번호</label><input type="text" id="in-bank-account" class="admin-input" oninput="updatePreview()" value="140-012-565030"></div>
+                        <div><label class="field-label">예금주</label><input type="text" id="in-bank-owner" class="admin-input" oninput="updatePreview()" value="특허법인 테헤란"></div>
+                        <div><label class="field-label">담당직원</label><input type="text" id="in-manager" class="admin-input" oninput="updatePreview()" value="관리팀 박솔아차장"></div>
+                    </div>
+                </section>
+
+                <section class="space-y-2">
+                    <div class="section-title">이미지 설정 (로고/도장)</div>
+                    <div class="flex gap-2">
+                        <label class="cursor-pointer bg-slate-700 text-white px-3 py-1.5 rounded text-[10px] font-bold hover:bg-slate-600 flex items-center gap-1.5 flex-1 justify-center relative overflow-hidden">
+                            <input type="file" id="logo-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleImageUpload(this,'pv-logo','teheran_logo_v1')">
+                            <i class="fa-solid fa-image relative z-10"></i> <span class="relative z-10">로고</span>
+                        </label>
+                        <label class="cursor-pointer bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded text-[10px] font-bold hover:bg-slate-50 flex items-center gap-1.5 flex-1 justify-center relative overflow-hidden">
+                            <input type="file" id="seal-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleImageUpload(this,'pv-seal-img','teheran_seal_v1')">
+                            <i class="fa-solid fa-stamp text-red-500 relative z-10"></i> <span class="relative z-10">도장</span>
+                        </label>
+                    </div>
+                    <label class="flex items-center gap-2 text-[10px] text-slate-500 cursor-pointer">
+                        <input type="checkbox" id="logo-filter-check" class="w-4 h-4" onchange="toggleLogoFilter(this.checked)" checked> 로고 배경 투명화
+                    </label>
+                    <p class="text-[9px] text-slate-400">* logo.png, seal.png 파일이 있으면 기본 표시</p>
+                </section>
+
+                <section class="space-y-2">
+                    <div class="section-title flex items-center justify-between">
+                        <span>하단 안내 멘트</span>
+                        <button onclick="addNotice()" class="text-[9px] border border-slate-300 px-2 py-0.5 rounded">+ 줄</button>
+                    </div>
+                    <div id="notice-container" class="space-y-1.5"></div>
+                    <div>
+                        <label class="field-label">총금액 하단 문구</label>
+                        <input type="text" id="in-total-note" class="admin-input" value="관납료, 수수료, 부가가치세(10%) 포함" oninput="updatePreview()">
+                    </div>
+                </section>
+
+                <div class="p-4 bg-slate-900 rounded-lg text-white flex-shrink-0">
+                    <div class="flex justify-between text-[11px] mb-2 opacity-60"><span>최종 합계 (VAT 포함)</span><span id="admin-total-preview">₩ 0</span></div>
+                    <button id="btn-publish" onclick="publishQuote()" class="w-full bg-blue-600 py-3 rounded font-bold text-sm hover:bg-blue-500 transition shadow-lg">견적서 발행 및 링크 복사</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 모바일에서만 표시: 입력 폼과 미리보기 구분 -->
+        <div id="mobile-preview-divider" class="md:hidden flex-shrink-0 py-4 px-4 bg-slate-200 text-center no-print">
+            <span class="text-sm font-bold text-slate-600">▼ 견적서 미리보기</span>
+        </div>
+
+        <main id="preview-container" class="flex-shrink-0 md:flex-grow overflow-y-auto">
+            <div class="max-w-4xl mx-auto shadow-2xl bg-white min-h-[900px] border border-slate-200 flex flex-col">
+                <div class="hero-header text-center">
+                    <div class="logo-center">
+                        <img id="pv-logo" src="" class="logo-img" alt="TEHERAN" style="display:none;">
+                        <span id="pv-logo-text">TEHERAN</span>
+                    </div>
+                    <h1 id="pv-title" class="text-xl md:text-2xl font-bold tracking-tight mb-4 md:mb-6 px-4 md:px-12 text-white">특허출원 비용 견적서 송부의 건</h1>
+                    
+                    <div class="print-row px-4 md:px-12 pb-4 md:pb-6 flex flex-col md:flex-row md:justify-between md:items-end gap-3 text-white">
+                        <div class="print-half text-left w-full md:w-1/2">
+                            <div class="space-y-1 text-[12px] opacity-90 font-light">
+                                <p><span class="label-left">수신자</span> : <span id="pv-customer" class="text-white">김진왕 원장</span></p>
+                                <p><span class="label-left">연락처</span> : <span id="pv-phone">010-1234-5678</span></p>
+                                <p><span class="label-left">이메일</span> : <span id="pv-email">jinwang.kim@teheran-sample.com</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="print-half w-full md:w-1/2 flex flex-col md:items-end">
+                            <div class="text-left">
+                                <div class="space-y-1 text-[12px] opacity-90 font-light">
+                                    <p><span class="label-right">담당변리사</span> : <span id="pv-sender-name" class="text-white">윤웅채</span></p>
+                                    <p><span class="label-right">연락처</span> : <span id="pv-sender-phone">010-8875-4370</span></p>
+                                    <p><span class="label-right">이메일</span> : <span id="pv-sender-email">wcyoon@thrlaw.co.kr</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="print-grid max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 border-t border-white/10 pt-3 md:pt-4 pb-3 md:pb-4 text-left text-[12px] md:text-[11px] text-white gap-4 sm:gap-0">
+                        <div class="px-4 md:px-8 sm:border-r border-white/10"><p class="opacity-50 mb-1 uppercase text-[10px] md:text-[9px]">견적일</p><p id="pv-today">-</p></div>
+                        <div class="px-4 md:px-8 sm:border-r border-white/10"><p class="opacity-50 mb-1 uppercase text-[10px] md:text-[9px]">견적 유효기간</p><p id="pv-expiry-val" class="text-blue-300">-</p></div>
+                        <div class="px-4 md:px-8"><p class="opacity-50 text-[10px] md:text-[8px] mb-1 uppercase">견적 정보</p><p id="pv-quote-info" class="opacity-90 font-medium">신규, 특허출원, 우선심사, 1건</p></div>
+                    </div>
+                </div>
+
+                <div class="p-4 md:p-8 flex-grow relative flex flex-col">
+                    <div class="overflow-x-auto -mx-4 md:mx-0 mb-4 md:mb-6">
+                    <table class="w-full text-left premium-table min-w-[320px]">
+                        <thead>
+                            <tr>
+                                <th>서비스 상세 항목</th>
+                                <th class="col-gov">특허청 관납료</th>
+                                <th class="col-fee">대리인 수수료</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pv-table-body" class="divide-y divide-slate-50">
+                            <tr>
+                                <td><div class="font-bold text-slate-800 text-[14px]">특허출원 (바이오모듈레이터)</div><div class="text-[10px] text-slate-400 mt-0.5">특허청 실비 포함</div></td>
+                                <td class="col-gov"><div class="text-slate-500 font-medium">46,000</div><div class="text-[9px] text-slate-400 font-medium mt-0.5">*청구항 5항 기준</div></td>
+                                <td class="col-fee"><div class="text-slate-900 font-bold">1,500,000</div><div class="text-[9px] text-slate-400 font-medium mt-0.5">*부가세별도</div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+
+                    <div class="print-keep print-row print-row-center flex flex-col md:flex-row gap-0 bg-[#F8FAFC] p-4 md:p-6 mt-4 md:mt-8 border-t border-slate-200">
+                        <div class="flex-grow flex flex-col justify-center md:pr-8">
+                            <div id="pv-notice" class="space-y-1 text-[11px] md:text-[10px] text-slate-400 leading-relaxed font-light"><div>• 본 견적 금액에는 대리인 수수료에 대한 부가가치세(10%)가 포함되어 있습니다.</div><div>• 관납료는 국가 실비로서, 고객사의 감면 조건에 따라 실제 납부 시점에 변동될 수 있습니다.</div><div>• 착수금 입금 확인 후 업무가 공식적으로 개시됩니다.</div></div>
+                        </div>
+                        <div id="total-divider" class="print-total w-full md:w-[300px] text-right flex flex-col justify-center border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-8">
+                            <p class="text-[10px] text-slate-400 font-bold tracking-widest uppercase mb-1">총금액</p>
+                            <h2 id="pv-total" class="text-3xl font-extrabold tracking-tighter text-[#001A35]">₩ 1,696,000</h2>
+                            <p id="pv-total-note" class="text-[10px] text-slate-400 mt-2 leading-relaxed italic">관납료, 수수료, 부가가치세(10%) 포함</p>
+                        </div>
+                    </div>
+
+                    <div class="print-row print-bank mt-4 md:mt-6 mb-2 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+                        <div class="print-bank-left w-full md:w-[calc(100%-300px)]">
+                            <table class="bank-table">
+                                <tr><td>은행명</td><td id="pv-bank-name">신한은행</td></tr>
+                                <tr><td>계좌번호</td><td id="pv-bank-account" class="font-bold text-slate-800">140-012-565030</td></tr>
+                                <tr><td>예금주</td><td id="pv-bank-owner">특허법인 테헤란</td></tr>
+                                <tr><td>담당직원</td><td id="pv-manager" class="text-blue-600 font-bold">관리팀 박솔아차장</td></tr>
+                            </table>
+                        </div>
+                        <div class="no-print w-full md:flex-grow flex justify-end pb-1">
+                            <button type="button" id="btn-print" class="text-[11px] md:text-[10px] font-bold text-slate-400 border border-slate-200 px-5 py-2.5 rounded hover:bg-slate-50 flex items-center gap-1.5 w-full md:w-auto justify-center">
+                                <i class="fa-solid fa-print"></i> PDF 저장 / 인쇄하기
+                            </button>
+                        </div>
+                    </div>
+
+                    <footer class="print-footer border-t border-slate-200 pt-6 md:pt-8 mt-auto text-[11px] md:text-[10px] text-slate-500">
+                        <div class="print-row flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-2 md:mb-3 mt-3 md:mt-4">
+                            <div class="catchphrase-container">
+                                <div class="cp-text">길눈이 밝은,</div>
+                                <div class="cp-text text-blue-600">사업파트너 테헤란</div>
+                            </div>
+                            
+                            <div class="print-footer-right text-left space-y-1 w-full md:w-[300px] md:pl-10">
+                                <div class="seal-wrapper">
+                                    <p class="text-[13px] font-bold text-slate-800 mb-1">특허법인 테헤란</p>
+                                    <img id="pv-seal-img" src="" class="official-seal" alt="인감도장">
+                                </div>
+                                <p>서울 강남구 테헤란로 418, 다봉타워 5층 (대치동)</p>
+                                <p>Tel: 02-2038-7679 | Fax: 02-2038-0879</p>
+                                <p>Email: patent@thrlaw.co.kr</p>
+                                <p>H.P: <a href="http://www.teheranpat.com" target="_blank" class="text-blue-600 font-medium hover:underline">www.teheranpat.com</a></p>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            </div>
+        </main>
+
+        <!-- 모바일 전용: 하단 고정 PDF/인쇄 버튼 (터치 영역 확대) -->
+        <div class="print-btn-fixed md:hidden no-print">
+            <button type="button" id="btn-print-mobile" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:bg-blue-700">
+                <i class="fa-solid fa-print"></i> PDF 저장 / 인쇄하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rtowbufnvgttwkhcqabr.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_zRNdalbfBKbEleWUmm_VcQ_gvYAxXyd';
+        const STORAGE_BUCKET = 'quote-assets';
+        const GOOGLE_SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzyjCYt7XynMU8mJ4xw5IYAqRXjGcLfSdCoPVwNDIeofRe8kh9OTbjgjdmLgD0Y4Kkd/exec';
+        let _supabase = null;
+        try { _supabase = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null; } catch(e) { console.warn('Supabase init:', e); }
+        function whenSupabaseReady() {
+            if (typeof supabase !== 'undefined') { try { _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); checkUrlAndLoad(); } catch(e) {} return; }
+            var t = setInterval(function() { if (typeof supabase !== 'undefined') { clearInterval(t); try { _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); checkUrlAndLoad(); } catch(e) {} } }, 100);
+            setTimeout(function() { clearInterval(t); }, 8000);
+        }
+
+        function dataURLtoBlob(dataURL) {
+            const arr = dataURL.split(',');
+            const mime = (arr[0].match(/:(.*?);/) || [])[1] || 'image/png';
+            const bstr = atob(arr[1]);
+            const u8arr = new Uint8Array(bstr.length);
+            for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
+            return new Blob([u8arr], { type: mime });
+        }
+
+        function compressImage(dataURL, maxW) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width, h = img.height;
+                    if (w > maxW) { h = (h * maxW) / w; w = maxW; }
+                    const c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    const ctx = c.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(c.toDataURL('image/png', 0.85));
+                };
+                img.onerror = () => resolve(dataURL);
+                img.src = dataURL;
+            });
+        }
+
+        async function uploadImageToStorage(dataURL, fileName) {
+            try {
+                const blob = dataURLtoBlob(dataURL);
+                const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/jpeg' ? 'jpg' : 'png';
+                const path = `quotes/${Date.now()}_${Math.random().toString(36).slice(2)}_${fileName}.${ext}`;
+                const { data: uploadData, error } = await _supabase.storage.from(STORAGE_BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+                if (error) {
+                    console.error('Storage error:', error);
+                    return { error: error.message || JSON.stringify(error) };
+                }
+                const { data: { publicUrl } } = _supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+                return publicUrl;
+            } catch (e) {
+                console.error('Storage upload failed:', e);
+                return { error: e.message || String(e) };
+            }
+        }
+        let items = [{ id: 1, name: '특허출원 (바이오모듈레이터)', govPrice: 46000, feePrice: 1500000, isGovTBD: false, note: '특허청 실비 포함', govText: '*청구항 5항 기준', feeText: '*부가세별도' }];
+        let notices = ["• 본 견적 금액에는 대리인 수수료에 대한 부가가치세(10%)가 포함되어 있습니다.", "• 관납료는 국가 실비로서, 고객사의 감면 조건에 따라 실제 납부 시점에 변동될 수 있습니다.", "• 착수금 입금 확인 후 업무가 공식적으로 개시됩니다."];
+        
+        function getFormattedDate(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}.${month}.${day}`;
+        }
+
+        function sanitizeFilename(s) {
+            if (!s || typeof s !== 'string') return '';
+            return s.replace(/[/\\:*?"<>|]/g, '').replace(/\s+/g, '_').trim() || '견적서';
+        }
+        function doPrint(e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            window.print();
+        }
+        function setPrintTitle() {
+            const customer = document.getElementById('in-customer')?.value || '';
+            const title = document.getElementById('in-title')?.value || '';
+            const fn = sanitizeFilename(customer) + '_테헤란_' + sanitizeFilename(title);
+            if (fn && fn !== '_테헤란_') {
+                _originalTitle = document.title;
+                document.title = fn;
+            }
+        }
+        function restorePrintTitle() {
+            if (_originalTitle) { document.title = _originalTitle; _originalTitle = null; }
+        }
+        let _originalTitle = null;
+        function init() { 
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            document.getElementById('in-quote-date').value = todayStr;
+            
+            [document.getElementById('btn-print'), document.getElementById('btn-print-mobile')].forEach(btn => {
+                if (btn) {
+                    btn.addEventListener('click', function(){ setPrintTitle(); doPrint(); });
+                    btn.addEventListener('touchend', function(ev){ ev.preventDefault(); setPrintTitle(); doPrint(ev); }, { passive: false });
+                }
+            });
+            window.addEventListener('beforeprint', setPrintTitle);
+            window.addEventListener('afterprint', restorePrintTitle);
+            
+            refreshTemplateSelect();
+            handleExpiry("7"); 
+            renderInputs(); 
+            renderNotices(); 
+            updatePreview(); 
+            loadSavedImages();
+            toggleLogoFilter(document.getElementById('logo-filter-check').checked);
+            checkUrlAndLoad();
+            updatePreview();
+        }
+        
+        function handleImageUpload(input, targetId, storageKey) {
+            if (!input.files || !input.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById(targetId);
+                if (!img) return;
+                img.src = e.target.result;
+                img.style.display = 'block';
+                if (targetId === 'pv-logo') {
+                    document.getElementById('pv-logo-text').style.display = 'none';
+                    toggleLogoFilter(document.getElementById('logo-filter-check').checked);
+                }
+                localStorage.setItem(storageKey, e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        // [핵심 기술] 로고의 흰색 배경을 투명하게 만드는 CSS 조합 적용
+        function toggleLogoFilter(isChecked) {
+            const logoImg = document.getElementById('pv-logo');
+            if (!logoImg) return;
+            if(isChecked) {
+                // 1. 색상 반전 (검은 글씨 -> 흰 글씨, 흰 배경 -> 검은 배경)
+                // 2. mix-blend-mode: screen (검은색 배경을 투명하게 만듦)
+                logoImg.style.filter = 'invert(1)';
+                logoImg.style.mixBlendMode = 'screen';
+            } else {
+                logoImg.style.filter = 'none';
+                logoImg.style.mixBlendMode = 'normal';
+            }
+        }
+
+        function loadSavedImages() {
+            const logoImg = document.getElementById('pv-logo');
+            const sealImg = document.getElementById('pv-seal-img');
+            const savedLogo = localStorage.getItem('teheran_logo_v1');
+            if (savedLogo) {
+                logoImg.src = savedLogo;
+                logoImg.style.display = 'block';
+                document.getElementById('pv-logo-text').style.display = 'none';
+            } else {
+                logoImg.onload = function() { logoImg.style.display = 'block'; document.getElementById('pv-logo-text').style.display = 'none'; };
+                logoImg.onerror = function() { logoImg.src = ''; };
+                logoImg.src = 'logo.png';
+            }
+            const savedSeal = localStorage.getItem('teheran_seal_v1');
+            if (savedSeal) {
+                sealImg.src = savedSeal;
+                sealImg.style.display = 'block';
+            } else {
+                sealImg.onload = function() { sealImg.style.display = 'block'; };
+                sealImg.onerror = function() { sealImg.src = ''; };
+                sealImg.src = 'seal.png';
+            }
+        }
+
+        function handleExpiry(val) { 
+            const dateInput = document.getElementById('in-expiry-date'); 
+            let quoteDateVal = document.getElementById('in-quote-date').value;
+            let targetDate = quoteDateVal ? new Date(quoteDateVal) : new Date(); 
+            
+            if(val === 'custom') {
+                dateInput.classList.remove('hidden'); 
+            } else { 
+                dateInput.classList.add('hidden'); 
+                targetDate.setDate(targetDate.getDate() + parseInt(val)); 
+                dateInput.value = targetDate.toISOString().split('T')[0]; 
+            }
+            updatePreview(); 
+        }
+
+        function addRow() { items.push({ id: Date.now(), name: '', govPrice: 0, feePrice: 0, isGovTBD: false, note: '특허청 실비 포함', govText: '*청구항 5항 기준', feeText: '*부가세별도' }); renderInputs(); updatePreview(); }
+        function removeRow(id) { items = items.filter(i => i.id !== id); renderInputs(); updatePreview(); }
+        
+        const TEMPLATE_KEY = 'teheran_quote_templates';
+        function getTemplates() { try { return JSON.parse(localStorage.getItem(TEMPLATE_KEY) || '[]'); } catch { return []; } }
+        function saveTemplates(arr) { localStorage.setItem(TEMPLATE_KEY, JSON.stringify(arr)); }
+        function refreshTemplateSelect() {
+            const sel = document.getElementById('template-select');
+            const list = getTemplates();
+            sel.innerHTML = '<option value="">— 템플릿 불러오기 —</option>' + list.map((t,i)=>`<option value="${i}">${t.name || '템플릿 '+(i+1)}</option>`).join('');
+        }
+        function saveTemplate() {
+            const name = prompt('템플릿 이름을 입력하세요', '견적 템플릿 ' + (getTemplates().length + 1));
+            if (!name) return;
+            const t = {
+                name,
+                customer: document.getElementById('in-customer').value,
+                phone: document.getElementById('in-phone').value,
+                email: document.getElementById('in-email').value,
+                senderName: document.getElementById('in-sender-name').value,
+                senderPhone: document.getElementById('in-sender-phone').value,
+                senderEmail: document.getElementById('in-sender-email').value,
+                quoteDate: document.getElementById('in-quote-date').value,
+                expiryOpt: document.getElementById('in-expiry-opt').value,
+                expiryDate: document.getElementById('in-expiry-date').value,
+                quoteInfo: document.getElementById('in-quote-info').value,
+                title: document.getElementById('in-title').value,
+                items: JSON.parse(JSON.stringify(items)),
+                notices: [...notices],
+                bankName: document.getElementById('in-bank-name').value,
+                bankAccount: document.getElementById('in-bank-account').value,
+                bankOwner: document.getElementById('in-bank-owner').value,
+                manager: document.getElementById('in-manager').value,
+                totalNote: document.getElementById('in-total-note').value
+            };
+            const list = getTemplates();
+            list.push(t);
+            saveTemplates(list);
+            refreshTemplateSelect();
+            alert('템플릿 "' + name + '" 저장 완료');
+        }
+        function loadTemplate(idx) {
+            const i = parseInt(idx, 10);
+            if (isNaN(i) || i < 0) return;
+            const list = getTemplates();
+            const t = list[i];
+            if (!t) return;
+            document.getElementById('in-customer').value = t.customer || '';
+            document.getElementById('in-phone').value = t.phone || '';
+            document.getElementById('in-email').value = t.email || '';
+            document.getElementById('in-sender-name').value = t.senderName || '';
+            document.getElementById('in-sender-phone').value = t.senderPhone || '';
+            document.getElementById('in-sender-email').value = t.senderEmail || '';
+            document.getElementById('in-quote-date').value = t.quoteDate || '';
+            document.getElementById('in-expiry-opt').value = t.expiryOpt || '7';
+            document.getElementById('in-expiry-date').value = t.expiryDate || '';
+            document.getElementById('in-quote-info').value = t.quoteInfo || '';
+            document.getElementById('in-title').value = t.title || '';
+            items = (t.items && t.items.length) ? t.items.map((x,i)=>({...x, id: x.id || Date.now()+i})) : [{ id: Date.now(), name: '', govPrice: 0, feePrice: 0, isGovTBD: false, note: '특허청 실비 포함', govText: '*청구항 5항 기준', feeText: '*부가세별도' }];
+            notices = Array.isArray(t.notices) ? [...t.notices] : notices;
+            document.getElementById('in-bank-name').value = t.bankName || '';
+            document.getElementById('in-bank-account').value = t.bankAccount || '';
+            document.getElementById('in-bank-owner').value = t.bankOwner || '';
+            document.getElementById('in-manager').value = t.manager || '';
+            document.getElementById('in-total-note').value = t.totalNote || '';
+            handleExpiry(document.getElementById('in-expiry-opt').value);
+            renderInputs(); renderNotices(); updatePreview();
+            document.getElementById('template-select').value = '';
+        }
+        function deleteTemplate() {
+            const sel = document.getElementById('template-select');
+            const i = parseInt(sel.value, 10);
+            if (isNaN(i) || i < 0) { alert('삭제할 템플릿을 먼저 선택하세요.'); return; }
+            const list = getTemplates();
+            const name = list[i]?.name || ('템플릿 ' + (i+1));
+            if (!confirm('"' + name + '" 템플릿을 삭제할까요?')) return;
+            list.splice(i, 1);
+            saveTemplates(list);
+            refreshTemplateSelect();
+        }
+
+        function renderInputs() {
+            const container = document.getElementById('items-container'); container.innerHTML = '';
+            items.forEach(item => {
+                const div = document.createElement('div'); div.className = 'p-3 bg-slate-50 border border-slate-200 rounded space-y-2 relative';
+                div.innerHTML = `<button onclick="removeRow(${item.id})" class="absolute top-1.5 right-1.5 text-slate-300 hover:text-red-500 text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+                <div class="space-y-1">
+                    <input type="text" class="admin-input font-bold" value="${item.name}" oninput="updateItem(${item.id}, 'name', this.value)" placeholder="서비스 항목명">
+                    <input type="text" class="admin-input text-[10px] h-6" value="${item.note || ''}" oninput="updateItem(${item.id}, 'note', this.value)" placeholder="비고">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1 p-2 bg-white rounded border border-slate-100">
+                        <div class="flex items-center gap-1">
+                            <input type="number" class="admin-input text-right text-[11px] flex-1" value="${item.govPrice}" oninput="updateItem(${item.id}, 'govPrice', this.value)" ${item.isGovTBD ? 'disabled' : ''}>
+                            <label class="text-[9px]"><input type="checkbox" onchange="toggleTBD(${item.id}, this.checked)" ${item.isGovTBD ? 'checked' : ''}> 추후</label>
+                        </div>
+                        <input type="text" class="admin-input text-[9px] h-5 opacity-70" value="${item.govText || ''}" oninput="updateItem(${item.id}, 'govText', this.value)" placeholder="관납료 설명">
+                    </div>
+                    <div class="space-y-1 p-2 bg-white rounded border border-slate-100">
+                        <input type="number" class="admin-input text-right text-blue-600 font-bold text-[11px]" value="${item.feePrice}" oninput="updateItem(${item.id}, 'feePrice', this.value)" placeholder="수수료">
+                        <input type="text" class="admin-input text-[9px] h-5 opacity-70" value="${item.feeText || ''}" oninput="updateItem(${item.id}, 'feeText', this.value)" placeholder="수수료 설명">
+                    </div>
+                </div>`;
+                container.appendChild(div);
+            });
+        }
+        function updateItem(id, field, value) { const item = items.find(x => x.id === id); if (item) { item[field] = (field === 'govPrice' || field === 'feePrice') ? Number(value) : value; updatePreview(); } }
+        function toggleTBD(id, c) { const i = items.find(x=>x.id===id); i.isGovTBD = c; if(c) { i.govPrice = 0; i.note = '※ 명세서 확정 후 실비 청구'; } else { i.note = '특허청 실비 포함'; } renderInputs(); updatePreview(); }
+        function addNotice() { notices.push(""); renderNotices(); updatePreview(); }
+        function removeNotice(idx) { notices.splice(idx, 1); renderNotices(); updatePreview(); }
+        function updateNotice(idx, val) { notices[idx] = val; updatePreview(); }
+        function renderNotices() {
+            const container = document.getElementById('notice-container'); container.innerHTML = '';
+            notices.forEach((n, idx) => {
+                const div = document.createElement('div'); div.className = 'flex gap-1.5';
+                div.innerHTML = `<input type="text" class="admin-input text-[11px] flex-1" value="${n}" oninput="updateNotice(${idx}, this.value)"><button onclick="removeNotice(${idx})" class="text-slate-300 text-sm w-6 flex-shrink-0">×</button>`;
+                container.appendChild(div);
+            });
+        }
+        function updatePreview() {
+            document.getElementById('pv-customer').innerText = document.getElementById('in-customer').value || '수신인 미입력';
+            document.getElementById('pv-title').innerText = document.getElementById('in-title').value;
+            document.getElementById('pv-phone').innerText = document.getElementById('in-phone').value ? `${document.getElementById('in-phone').value}` : '-';
+            document.getElementById('pv-email').innerText = document.getElementById('in-email').value ? `${document.getElementById('in-email').value}` : '-';
+            
+            document.getElementById('pv-quote-info').innerText = document.getElementById('in-quote-info').value || '-';
+            
+            const quoteDateStr = document.getElementById('in-quote-date').value;
+            document.getElementById('pv-today').innerText = quoteDateStr ? getFormattedDate(quoteDateStr) : '-';
+
+            const expiryDateStr = document.getElementById('in-expiry-date').value;
+            document.getElementById('pv-expiry-val').innerText = expiryDateStr ? getFormattedDate(expiryDateStr) : '-';
+            
+            document.getElementById('pv-sender-name').innerText = document.getElementById('in-sender-name').value;
+            document.getElementById('pv-sender-phone').innerText = `${document.getElementById('in-sender-phone').value}`;
+            document.getElementById('pv-sender-email').innerText = `${document.getElementById('in-sender-email').value}`;
+
+            document.getElementById('pv-bank-name').innerText = document.getElementById('in-bank-name').value;
+            document.getElementById('pv-bank-account').innerText = document.getElementById('in-bank-account').value;
+            document.getElementById('pv-bank-owner').innerText = document.getElementById('in-bank-owner').value;
+            document.getElementById('pv-manager').innerText = document.getElementById('in-manager').value;
+            
+            document.getElementById('pv-total-note').innerText = document.getElementById('in-total-note').value;
+
+            const tbody = document.getElementById('pv-table-body'); tbody.innerHTML = '';
+            let tGov = 0, tFee = 0;
+            items.forEach(item => {
+                const govDisp = item.isGovTBD ? '<span class="text-slate-400 italic text-xs">추후청구</span>' : new Intl.NumberFormat('ko-KR').format(item.govPrice);
+                
+                // [수정] 테이블 레이아웃: Block 배치 (위아래)
+                tbody.insertAdjacentHTML('beforeend', `<tr>
+                    <td>
+                        <div class="font-bold text-slate-800 text-[14px]">${item.name || '미입력'}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">${item.note || ''}</div>
+                    </td>
+                    <td class="col-gov">
+                        <div class="text-slate-500 font-medium">${govDisp}</div>
+                        <div class="text-[9px] text-slate-400 font-medium mt-0.5">${item.govText || ''}</div>
+                    </td>
+                    <td class="col-fee">
+                        <div class="text-slate-900 font-bold">${new Intl.NumberFormat('ko-KR').format(item.feePrice)}</div>
+                        <div class="text-[9px] text-slate-400 font-medium mt-0.5">${item.feeText || ''}</div>
+                    </td>
+                </tr>`);
+                tGov += item.govPrice; tFee += item.feePrice;
+            });
+            const grandTotal = Math.round(tFee * 1.1) + tGov;
+            document.getElementById('pv-total').innerText = '₩ ' + new Intl.NumberFormat('ko-KR').format(grandTotal);
+            document.getElementById('admin-total-preview').innerText = '₩ ' + new Intl.NumberFormat('ko-KR').format(grandTotal);
+            document.getElementById('pv-notice').innerHTML = notices.map(n => `<div>${n}</div>`).join('');
+        }
+
+        function sendToGoogleSheet(sheetRows) {
+            if (!GOOGLE_SHEETS_WEBHOOK) return;
+            const data = { rows: sheetRows };
+            const apiUrl = window.location.origin + '/.netlify/functions/sheet-log';
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ webhook: GOOGLE_SHEETS_WEBHOOK, data: data })
+            }).catch(function(e) { console.warn('구글 시트 전송:', e); });
+        }
+        function testGoogleSheet() {
+            if (!GOOGLE_SHEETS_WEBHOOK) return alert('GOOGLE_SHEETS_WEBHOOK가 설정되지 않았습니다.');
+            const q = { phone: document.getElementById('in-phone').value, email: document.getElementById('in-email').value, quote_info: document.getElementById('in-quote-info').value, quote_date: document.getElementById('in-quote-date').value, expiry: document.getElementById('in-expiry-date').value, title: document.getElementById('in-title').value, sender: { name: document.getElementById('in-sender-name').value } };
+            const tGov = (items || []).reduce((s, i) => s + (i.govPrice || 0), 0);
+            const tFee = (items || []).reduce((s, i) => s + (i.feePrice || 0), 0);
+            const grandTotal = Math.round(tFee * 1.1) + tGov;
+            const costItems = (items && items.length) ? items : [{ govPrice: 0, feePrice: 0 }];
+            const sheetRows = costItems.map(it => ({ recipient: document.getElementById('in-customer').value || '', phone: q.phone || '', email: q.email || '', attorney: (q.sender && q.sender.name) ? q.sender.name : '', quoteDate: q.quote_date || '', expiry: q.expiry || '', quoteInfo: q.quote_info || '', title: q.title || '', govFee: it.govPrice || 0, agentFee: it.feePrice || 0, total: grandTotal, link: '[테스트] ' + window.location.origin }));
+            sendToGoogleSheet(sheetRows);
+            alert('전송 완료. 구글 시트를 새로고침해 확인해보세요.');
+        }
+        
+        async function publishQuote() {
+            if (!_supabase) return alert("Supabase 연결을 확인해주세요. (네트워크/콘솔 확인)");
+            const customer = document.getElementById('in-customer').value; if(!customer) return alert("고객명을 입력해주세요.");
+            const btn = document.getElementById('btn-publish'); btn.innerText = "저장 중..."; btn.disabled = true;
+            
+            const sealImg = document.getElementById('pv-seal-img');
+            const sealDataURL = (sealImg.style.display !== 'none' && sealImg.src) ? sealImg.src : null;
+            const logoImg = document.getElementById('pv-logo');
+            const logoDataURL = (logoImg.style.display !== 'none' && logoImg.src) ? logoImg.src : null;
+
+            let logoUrl = null, sealUrl = null;
+            let logoData = null, sealData = null;
+            if (logoDataURL && logoDataURL.startsWith('data:')) {
+                const compressed = await compressImage(logoDataURL, 600);
+                const res = await uploadImageToStorage(compressed, 'logo');
+                if (typeof res === 'string') logoUrl = res;
+                else { logoData = compressed; if (res && res.error) console.warn('로고 Storage 실패:', res.error); }
+            }
+            if (sealDataURL && sealDataURL.startsWith('data:')) {
+                const compressed = await compressImage(sealDataURL, 400);
+                const res = await uploadImageToStorage(compressed, 'seal');
+                if (typeof res === 'string') sealUrl = res;
+                else { sealData = compressed; if (res && res.error) console.warn('도장 Storage 실패:', res.error); }
+            }
+
+            const shareToken = crypto.randomUUID();
+            const payload = { 
+                customer_name: customer, 
+                share_token: shareToken,
+                quote_data: { 
+                    title: document.getElementById('in-title').value, 
+                    email: document.getElementById('in-email').value, 
+                    phone: document.getElementById('in-phone').value, 
+                    quote_info: document.getElementById('in-quote-info').value,
+                    quote_date: document.getElementById('in-quote-date').value,
+                    total_note: document.getElementById('in-total-note').value,
+                    
+                    sender: {
+                        name: document.getElementById('in-sender-name').value,
+                        phone: document.getElementById('in-sender-phone').value,
+                        email: document.getElementById('in-sender-email').value
+                    },
+
+                    expiry: document.getElementById('in-expiry-date').value, 
+                    items: items, 
+                    notices: notices, 
+                    bank: { 
+                        name: document.getElementById('in-bank-name').value, 
+                        account: document.getElementById('in-bank-account').value, 
+                        owner: document.getElementById('in-bank-owner').value, 
+                        manager: document.getElementById('in-manager').value 
+                    },
+                    logoUrl: logoUrl,
+                    sealUrl: sealUrl,
+                    logoData: logoData,
+                    sealData: sealData 
+                } 
+            };
+            const { data, error } = await _supabase.from('quotes').insert([payload]).select();
+            if (error) { alert("저장 실패: " + (error.message || '')); btn.innerText = "견적서 발행 및 링크 복사"; btn.disabled = false; return; }
+            const token = data[0].share_token || data[0].id;
+            const fullLink = `${window.location.origin}${window.location.pathname}?token=${token}`;
+            payload._shareLink = fullLink;
+
+            if (GOOGLE_SHEETS_WEBHOOK) {
+                try {
+                    const q = payload.quote_data || {};
+                    const tGov = (items || []).reduce((s, i) => s + (i.govPrice || 0), 0);
+                    const tFee = (items || []).reduce((s, i) => s + (i.feePrice || 0), 0);
+                    const grandTotal = Math.round(tFee * 1.1) + tGov;
+                    const costItems = (items && items.length) ? items : [{ govPrice: 0, feePrice: 0 }];
+                    const sheetRows = costItems.map(it => ({
+                        recipient: payload.customer_name || '',
+                        phone: q.phone || '',
+                        email: q.email || '',
+                        attorney: (q.sender && q.sender.name) ? q.sender.name : '',
+                        quoteDate: q.quote_date || '',
+                        expiry: q.expiry || '',
+                        quoteInfo: q.quote_info || '',
+                        title: q.title || '',
+                        govFee: it.govPrice || 0,
+                        agentFee: it.feePrice || 0,
+                        total: grandTotal,
+                        link: fullLink
+                    }));
+                    sendToGoogleSheet(sheetRows);
+                } catch (e) { console.warn('구글 시트 연동:', e); }
+            }
+            navigator.clipboard.writeText(fullLink);
+            alert(`✅ 발행 성공 및 주소 복사 완료!\n\n${fullLink}`);
+            btn.innerText = "견적서 발행 및 링크 복사";
+            btn.disabled = false;
+        }
+
+        const DEFAULTS = { customer: '김진왕 원장', phone: '010-1234-5678', email: 'jinwang.kim@teheran-sample.com', title: '특허출원 비용 견적서 송부의 건', quoteInfo: '신규, 특허출원, 우선심사, 1건', bankName: '신한은행', bankAccount: '140-012-565030', bankOwner: '특허법인 테헤란', manager: '관리팀 박솔아차장', senderName: '윤웅채', senderPhone: '010-8875-4370', senderEmail: 'wcyoon@thrlaw.co.kr', totalNote: '관납료, 수수료, 부가가치세(10%) 포함' };
+
+        async function checkUrlAndLoad() {
+            if (!_supabase) return;
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token') || params.get('id');
+            if (!token) return;
+            document.querySelector('aside').style.display = 'none';
+            const divider = document.getElementById('mobile-preview-divider');
+            if (divider) divider.style.display = 'none';
+            const isNumeric = /^\d+$/.test(token);
+            const { data } = await _supabase.from('quotes').select('*')
+                .eq(isNumeric ? 'id' : 'share_token', isNumeric ? parseInt(token, 10) : token).single();
+            if (data) {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const q = data.quote_data || {};
+                    document.getElementById('in-customer').value = data.customer_name || DEFAULTS.customer;
+                    document.getElementById('in-title').value = q.title || DEFAULTS.title;
+                    document.getElementById('in-email').value = q.email || DEFAULTS.email;
+                    document.getElementById('in-phone').value = q.phone || DEFAULTS.phone;
+                    document.getElementById('in-quote-date').value = q.quote_date || todayStr;
+                    document.getElementById('in-expiry-date').value = q.expiry || '';
+                    if (!q.expiry) handleExpiry(document.getElementById('in-expiry-opt').value);
+                    document.getElementById('in-quote-info').value = q.quote_info || DEFAULTS.quoteInfo;
+                    document.getElementById('in-total-note').value = q.total_note || DEFAULTS.totalNote;
+                    if (q.sender) {
+                        document.getElementById('in-sender-name').value = q.sender.name || DEFAULTS.senderName;
+                        document.getElementById('in-sender-phone').value = q.sender.phone || DEFAULTS.senderPhone;
+                        document.getElementById('in-sender-email').value = q.sender.email || DEFAULTS.senderEmail;
+                    }
+                    const loadedItems = q.items;
+                    items = (Array.isArray(loadedItems) && loadedItems.length > 0) ? loadedItems : items;
+                    notices = (Array.isArray(q.notices) && q.notices.length > 0) ? q.notices : notices;
+                    if (q.bank) {
+                        document.getElementById('in-bank-name').value = q.bank.name || DEFAULTS.bankName;
+                        document.getElementById('in-bank-account').value = q.bank.account || DEFAULTS.bankAccount;
+                        document.getElementById('in-bank-owner').value = q.bank.owner || DEFAULTS.bankOwner;
+                        document.getElementById('in-manager').value = q.bank.manager || DEFAULTS.manager;
+                    }
+                    
+                    const sealSrc = data.quote_data.sealUrl || data.quote_data.sealData;
+                    if (sealSrc) {
+                        const img = document.getElementById('pv-seal-img');
+                        img.src = sealSrc;
+                        img.style.display = 'block';
+                    }
+                    const logoSrc = data.quote_data.logoUrl || data.quote_data.logoData;
+                    if (logoSrc) {
+                        const img = document.getElementById('pv-logo');
+                        img.src = logoSrc;
+                        img.style.display = 'block';
+                        document.getElementById('pv-logo-text').style.display = 'none';
+                        toggleLogoFilter(document.getElementById('logo-filter-check').checked);
+                    }
+
+                    renderInputs(); renderNotices(); updatePreview();
+            }
+        }
+        function resetAll() { 
+            if(confirm('초기화하시겠습니까? (기본 예시로 복원됩니다)')) { 
+                const todayStr = new Date().toISOString().split('T')[0];
+                document.getElementById('in-customer').value = '김진왕 원장';
+                document.getElementById('in-phone').value = '010-1234-5678';
+                document.getElementById('in-email').value = 'jinwang.kim@teheran-sample.com';
+                document.getElementById('in-title').value = '특허출원 비용 견적서 송부의 건';
+                document.getElementById('in-quote-info').value = '신규, 특허출원, 우선심사, 1건';
+                document.getElementById('in-quote-date').value = todayStr;
+                handleExpiry('7');
+                items = [{ id: Date.now(), name: '특허출원 (바이오모듈레이터)', govPrice: 46000, feePrice: 1500000, isGovTBD: false, note: '특허청 실비 포함', govText: '*청구항 5항 기준', feeText: '*부가세별도' }];
+                notices = ["• 본 견적 금액에는 대리인 수수료에 대한 부가가치세(10%)가 포함되어 있습니다.", "• 관납료는 국가 실비로서, 고객사의 감면 조건에 따라 실제 납부 시점에 변동될 수 있습니다.", "• 착수금 입금 확인 후 업무가 공식적으로 개시됩니다."];
+                renderInputs(); renderNotices(); updatePreview(); 
+            } 
+        }
+        function loadSample() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('in-customer').value = '김진왕 원장';
+            document.getElementById('in-phone').value = '010-1234-5678';
+            document.getElementById('in-email').value = 'jinwang.kim@teheran-sample.com';
+            document.getElementById('in-title').value = '특허출원 비용 견적서 송부의 건';
+            document.getElementById('in-quote-info').value = '신규, 특허출원, 우선심사, 1건';
+            document.getElementById('in-quote-date').value = todayStr;
+            handleExpiry('7');
+            items = [{ id: Date.now(), name: '특허출원 (바이오모듈레이터)', govPrice: 46000, feePrice: 1500000, isGovTBD: false, note: '특허청 실비 포함', govText: '*청구항 5항 기준', feeText: '*부가세별도' }];
+            renderInputs(); updatePreview();
+        }
+        try { init(); whenSupabaseReady(); } catch(e) { console.error('Init error:', e); var d=new Date(); var el=document.getElementById('in-quote-date'); if(el)el.value=d.toISOString().split('T')[0]; }
+    </script>
+</body>
+</html>
