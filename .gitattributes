@@ -1,0 +1,9 @@
+# Ensure consistent line endings and UTF-8 encoding for all text files
+* text=auto eol=lf
+
+# Explicit text files
+*.html text
+*.md text
+*.js text
+*.json text
+*.css text
